@@ -2,6 +2,12 @@
 
 This project follows Semantic Versioning. Tags use the `vMAJOR.MINOR.PATCH` form.
 
+## 1.1.1 — 2026-10-13
+
+- Use 22 px single-line request rows so more endpoints fit in the panel.
+- Show the endpoint name in each row; keep the full URL available on hover and in Headers.
+- Tighten column widths and adapt narrow lists by hiding Waterfall / Type as needed while retaining full request details.
+
 ## 1.1.0 — 2026-10-13
 
 First public release. The earlier 1.0.0 manifest belonged to a local prototype and was not a public release.

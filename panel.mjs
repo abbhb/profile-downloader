@@ -67,7 +67,7 @@ function render() {
     row.setAttribute('aria-selected', String(selected === item));
     row.title = `${info.method} ${item.entry.request.url}`;
     const name = element('td');
-    name.append(element('span', info.name, 'request-name'), element('span', `${info.domain}${info.path}`, 'request-path'));
+    name.append(element('span', info.name, 'request-name'));
     const method = element('td', info.method);
     const responseStatus = element('td', info.status || '(failed)', 'status-cell');
     const type = element('td', info.type);

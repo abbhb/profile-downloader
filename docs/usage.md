@@ -10,7 +10,8 @@
 
 打开目标网页的 DevTools，在标签栏或 `»` 中选择 **Profile**。面板同步 DevTools 已记录的请求，并在请求完成时追加 HTTP(S) 请求。
 
-- 表格按 Name、Method、Status、Type、Size、Time 和 Waterfall 展示，Name 优先展示接口末级名称，完整 URL 可在详情中查看。
+- 请求列表默认使用 22 px 单行密度，Name 展示接口末级名称；鼠标悬停请求行或打开 Headers，可查看完整 URL。
+- 宽面板展示 Name、Method、Status、Type、Size、Time 和 Waterfall；窄列表按需隐藏 Waterfall / Type，避免强制撑宽表格，完整信息仍可在详情中查看。
 - 输入接口名称或 URL 进行搜索，也支持空格组合 `method:POST`、`status:200`、`domain:example.test`；类型筛选可选择 All、Fetch/XHR、GET 或 POST。
 - 点击可排序的表头调整顺序。Waterfall 根据已记录时间绘制，用于定位相对先后，不是原生 Network 的完整性能工具。
 - 暂停录制用于停止自动接收新完成的请求；“同步 Network”用于显式重新读取现有记录。

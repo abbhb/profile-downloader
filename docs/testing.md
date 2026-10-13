@@ -7,13 +7,29 @@
 ```sh
 npm ci
 npm test
-npm run check -- v1.1.0
+npm run check -- v1.1.1
 npm run security:check
 npm run build
-npm run release:check -- v1.1.0
+npm run release:check -- v1.1.1
 ```
 
 后续版本替换命令中的 tag。`npm test` 运行 Node 内置测试器，没有真实浏览器或外部业务请求。开发环境要求 Node.js 22+。
+
+### 1.1.1 验证结果
+
+本版 `npm test` 29 项全部通过，`check`、敏感材料检查、构建和 `release:check -- v1.1.1` 均通过。
+
+浏览器测试加载真实 panel 资源并使用模拟 DevTools API、52 条合成请求，在 633 × 870 像素面板中比较结果：
+
+| 项目 | 旧布局 | 1.1.1 |
+| --- | --- | --- |
+| 请求行高度 | 38 px | 22 px |
+| 单屏完整请求行 | 19 | 34 |
+| 表格滚动宽度 | 700 px | 633 px，无横向溢出 |
+
+1280、633、560、441、440、375 像素宽面板均实测为 22 px 行高且无横向溢出。行悬停完整 URL、Headers URL、内部右键不自动发送、POST 明确重放与下载、键盘选择以及明暗主题均通过。新版文档截图已人工检查，全部使用 `example.test` 合成数据。
+
+本轮是模拟 API 的 UI 回归，不表示重新执行了真实 DevTools 或真实服务端采样验证。正式 tag 发布后仍需下载远端 Release 附件校验；此前真实扩展运行的覆盖范围见下文 1.1.0 记录。
 
 ### 1.1.0 本地结果
 

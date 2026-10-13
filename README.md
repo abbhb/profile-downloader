@@ -22,7 +22,7 @@ No build is required to load the source directory. This repository distributes a
 ## Use / 使用
 
 1. Trigger the request in the inspected page, or sync the requests already recorded by DevTools.
-2. Find the endpoint using the compact Name / Method / Status / Type / Size / Time / Waterfall table, sorting and filters.
+2. Find the endpoint using compact 22 px single-line rows, sorting and filters. Full URLs are available on hover and in Headers; narrow lists adapt the visible columns.
 3. Select the request to inspect Headers, Payload, Response and Timing.
 4. Right-click the request **inside Profile** to open its Profile action, then click the replay button to send once and save the HTML report.
 

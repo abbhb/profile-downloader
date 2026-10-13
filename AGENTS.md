@@ -15,6 +15,8 @@ If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is 
 
 - This is a Manifest V3 Chrome / Edge DevTools extension using vanilla JavaScript ES modules, HTML and CSS.
 - Prefer the compact Network-style workflow. Preserve request names, full URL discoverability, filters, sorting, request detail tabs and the in-panel right-click Profile action.
+- Default to 22 px single-line request rows. Keep the endpoint name on that line and the full URL in the row tooltip and Headers; preserving list density is an explicit product requirement. Retain this layout in future changes unless the user requests a different density.
+- Fit the table to narrow list panes with compact column widths and adaptive Waterfall / Type visibility; keep the complete request information in details.
 - Public Chrome APIs do not expose native Network request-row context-menu injection or its current selection. Do not claim a native Network bridge or use undocumented DevTools internals.
 - Capture HTTP(S) methods for inspection; replay only supported GET / POST requests after the user explicitly clicks replay. A context-menu selection alone must not send a request.
 - Preserve query parameters, full text body and settable headers. Reject missing body and multipart/file uploads; never silently substitute an empty body. Browser-managed headers remain browser-managed.
