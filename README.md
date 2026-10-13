@@ -23,10 +23,12 @@ No build is required to load the source directory. This repository distributes a
 
 1. Trigger the request in the inspected page, or sync the requests already recorded by DevTools.
 2. Find the endpoint using compact 22 px single-line rows, sorting and filters. Full URLs are available on hover and in Headers; narrow lists adapt the visible columns.
-3. Select the request to inspect Headers, Payload, Response and Timing.
+3. Select the request to inspect Headers, Payload, Response, Preview and Timing. JSON responses have syntax highlighting and a collapsible tree; copy the original response, formatted JSON or a node value with one click.
 4. Right-click the request **inside Profile** to open its Profile action, then click the replay button to send once and save the HTML report.
 
 **POST replay executes the operation again.** Cancellation stops the browser request when possible; it does not roll back server work.
+
+Response previews keep the first 102,400 characters. Response formatting preserves JSON token spelling; Preview uses JavaScript parsing, so exact large numbers and duplicate keys should be checked in Response. Full-text copying reads the recorded response on demand, up to 20 × 1024 × 1024 characters; clipboard failures are reported. [Response viewing and copying](docs/usage.md#查看与复制响应).
 
 Chrome's public extension API does not expose a way to add an action to the native Network request-row context menu or read its current selection. Profile is a separate DevTools panel with a Network-style interface; the right-click action lives in that panel. See [API boundaries](docs/compatibility.md).
 

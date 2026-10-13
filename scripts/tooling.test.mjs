@@ -30,8 +30,9 @@ test('ZIP inspection rejects modified content and invalid directories', () => {
 test('release allowlist contains only runtime files and license', () => {
   assert.deepEqual(RUNTIME_FILES, [
     'LICENSE', 'core.mjs', 'devtools.html', 'devtools.js', 'manifest.json',
-    'network.mjs', 'panel.css', 'panel.html', 'panel.mjs',
+    'network.mjs', 'panel.css', 'panel.html', 'panel.mjs', 'response.mjs',
   ]);
+  assert.equal(RUNTIME_FILES.length, 10);
   assert.deepEqual(releaseNames('1.1.0'), {
     archive: 'profile-downloader-1.1.0.zip', checksum: 'profile-downloader-1.1.0.zip.sha256',
   });

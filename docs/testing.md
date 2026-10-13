@@ -7,13 +7,30 @@
 ```sh
 npm ci
 npm test
-npm run check -- v1.1.1
+npm run check -- v1.2.0
 npm run security:check
 npm run build
-npm run release:check -- v1.1.1
+npm run release:check -- v1.2.0
 ```
 
 后续版本替换命令中的 tag。`npm test` 运行 Node 内置测试器，没有真实浏览器或外部业务请求。开发环境要求 Node.js 22+。
+
+### 1.2.0 验证结果
+
+本版 `npm test` 43 项全部通过（原有 29 项，加响应模块 14 项），`check`、敏感材料检查、构建与 `release:check -- v1.2.0` 均通过。
+
+使用真实 panel 资源与模拟 DevTools API 的浏览器回归完成 18 组检查，覆盖：
+
+- 五类 JSON token 高亮、“格式化 / 原始”切换、逐字原文复制，以及大整数 / 重复键的无损格式化 JSON 复制。
+- Preview 折叠、懒展开、节点 / 容器复制和 100 → 200 → 250 项分页；不安全解析数字拒绝复制。
+- 无效 JSON、HTML、标量、二进制与截断状态；截断预览复制约 11 万字符的完整原文，以及超过 20 Mi 字符时明确拒绝。
+- Clipboard API 成功、兼容复制成功、两级失败后可见且选中的手动文本，重试不累积复制区域。
+- 并发 `getContent` 读取去重、过期读取 / 复制回调隔离，查看和复制均不重放接口。
+- 明暗主题、633 / 375 像素面板与 22 px 单行密度。
+
+另在 macOS 隔离 Chrome/133.0.6943.16、localhost 合成服务完成 5 项真实扩展检查：真实 HAR `getContent` 生成高亮，Preview 结构树可用，原文 / 格式化 JSON / 节点三类复制结果与系统剪贴板内容一致。
+
+该真实浏览器中 `navigator.clipboard.writeText` 被拒绝，兼容 `execCommand` 复制成功；未声称已验证该环境的 Clipboard API 成功路径（此路径由模拟检查覆盖）。没有新增权限，也未验证真实业务后端或服务端采样。原始本地运行记录不随公开源码发布；tag 发布后仍需下载远端附件校验。
 
 ### 1.1.1 验证结果
 

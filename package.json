@@ -1,6 +1,6 @@
 {
   "name": "profile-downloader",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": true,
   "description": "Replay captured GET/POST requests from Chromium DevTools and download Pyinstrument HTML profiles.",
   "license": "MIT",
@@ -13,7 +13,7 @@
     "url": "https://github.com/abbhb/profile-downloader.git"
   },
   "scripts": {
-    "test": "node --test tests.mjs tests/network.test.mjs scripts/tooling.test.mjs",
+    "test": "node --test tests.mjs tests/network.test.mjs tests/response.test.mjs scripts/tooling.test.mjs",
     "check": "node scripts/check.mjs",
     "security:check": "node scripts/security-check.mjs",
     "build": "node scripts/build.mjs",

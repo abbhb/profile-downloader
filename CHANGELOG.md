@@ -2,6 +2,14 @@
 
 This project follows Semantic Versioning. Tags use the `vMAJOR.MINOR.PATCH` form.
 
+## 1.2.0 — 2026-10-13
+
+- Add JSON syntax highlighting in Response and a collapsible object / array tree in Preview.
+- Render tree children on demand in groups of 100, with a copy action for each value.
+- Add one-click original-response and formatted-JSON copying, including on-demand retrieval of complete text within the copy limit.
+- Keep bounded previews, explicit truncated / invalid / binary states, safe DOM rendering and the existing 22 px single-line request density.
+- Document clipboard export, copy failures and response-size limits without adding extension permissions.
+
 ## 1.1.1 — 2026-10-13
 
 - Use 22 px single-line request rows so more endpoints fit in the panel.

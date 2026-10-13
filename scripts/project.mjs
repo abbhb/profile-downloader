@@ -16,6 +16,7 @@ export const RUNTIME_FILES = Object.freeze([
   'panel.css',
   'panel.html',
   'panel.mjs',
+  'response.mjs',
 ]);
 
 export async function readProject(root = ROOT) {

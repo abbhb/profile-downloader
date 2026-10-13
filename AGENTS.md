@@ -23,6 +23,10 @@ If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is 
 - Keep current login/CORS/CSP/CSRF behavior visible. POST executes again, cancellation is not rollback, and server-side Pyinstrument integration is required.
 - Do not add analytics, remote services, storage of request data, automatic replay or retries without a direct user requirement.
 - Render captured fields and responses as text. Do not execute response HTML in the panel or interpolate request data into HTML.
+- Preserve Response JSON highlighting, the collapsible Preview tree and one-click copying. Build safe DOM nodes for keys and values; lazily render children in groups of 100 and keep node copy actions accessible.
+- Response formatting and formatted-JSON copying must preserve original tokens, including large integers, duplicate keys and escapes. Preview / node copying uses standard JavaScript parsing; document its precision and duplicate-key limits and keep the exact Response accessible. Reject copying unsafe parsed numbers and containers containing them. Label binary-text copying as Base64.
+- Keep response previews bounded to 102,400 source characters. Clearly identify truncated, invalid JSON and binary content; these states must not produce a misleading JSON tree.
+- Full-response copying may read the recorded response on demand, up to 20 × 1024 × 1024 characters, without persistently caching the complete body or replaying the endpoint. Report clipboard failures explicitly and allow manual copying. Copying must remain an explicit user action and must not add extension permissions.
 
 ## Development and privacy
 

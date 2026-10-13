@@ -1,5 +1,6 @@
 import {prepare, filename, validateReport, startReplay} from './core.mjs';
 import {MAX_ENTRIES, RESPONSE_PREVIEW_LIMIT, describe, formatSize, formatTime, matches, compareEntries, requestKey, waterfall} from './network.mjs';
+import {analyzeResponse, formatJSON, highlightJSON, createJSONTree, serializePreviewValue} from './response.mjs';
 
 const $ = id => document.getElementById(id);
 const api = chrome.devtools;
@@ -7,6 +8,8 @@ let entries = [], selected = null, busy = false, recording = true, activeKey = n
 let kind = 'all', sortColumn = 'start', sortDirection = 1, tab = 'headers', renderPending = false, responseVersion = 0, logGeneration = 0;
 const seen = new Map();
 const responses = new WeakMap();
+const COPY_LIMIT = 20 * 1024 * 1024;
+let responseMode = 'formatted';
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -124,6 +127,131 @@ function pretty(text) {
   const trimmed = String(text || '').slice(0, RESPONSE_PREVIEW_LIMIT);
   try { return JSON.stringify(JSON.parse(trimmed), null, 2); } catch { return trimmed; }
 }
+function readResponse(entry) {
+  return new Promise((resolve, reject) => {
+    if (typeof entry.getContent === 'function') entry.getContent((text, encoding) => resolve({text: String(text ?? ''), encoding}));
+    else if (entry.response?.content?.text !== undefined) resolve({text: String(entry.response.content.text), encoding: entry.response.content.encoding});
+    else reject(new Error('浏览器未保留响应正文，请重新触发此请求后再查看。'));
+  });
+}
+function loadResponse(entry) {
+  if (responses.has(entry)) return responses.get(entry);
+  const pending = readResponse(entry).then(({text, encoding}) => {
+    const data = {text: text.slice(0, RESPONSE_PREVIEW_LIMIT), encoding, truncated: text.length > RESPONSE_PREVIEW_LIMIT, length: text.length};
+    data.analysis = analyzeResponse(data.text, data);
+    if (data.analysis.formatted.length > RESPONSE_PREVIEW_LIMIT * 4) {
+      data.analysis.formatted = data.text;
+      data.analysis.error = '格式化预览过大，显示原始 JSON；可用复制 JSON 获取格式化全文。';
+    }
+    return data;
+  }).catch(error => { responses.delete(entry); throw error; });
+  // Cache only the bounded preview, including concurrent Response / Preview reads.
+  responses.set(entry, pending);
+  return pending;
+}
+async function copyText(text, host, current) {
+  if (text.length > COPY_LIMIT) throw new Error('复制内容超过 20 Mi 字符，请使用原生 Network 保存响应。');
+  if (!current()) return null;
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error('Clipboard API unavailable');
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch { /* Older DevTools frames can reject Clipboard API access. */ }
+  if (!current()) return null;
+  const focused = document.activeElement;
+  const textarea = element('textarea', undefined, 'clipboard-buffer');
+  textarea.value = text; textarea.readOnly = true;
+  textarea.setAttribute('aria-label', '待复制内容');
+  const viewer = host.querySelector('.response-viewer');
+  if (viewer) viewer.before(textarea); else host.append(textarea);
+  textarea.focus({preventScroll: true}); textarea.select();
+  let copied = false;
+  try { copied = document.execCommand('copy'); } catch { /* Keep a selectable manual fallback. */ }
+  if (copied) {
+    textarea.remove();
+    if (focused?.isConnected) focused.focus({preventScroll: true});
+    return true;
+  }
+  textarea.className = 'clipboard-manual';
+  textarea.scrollIntoView({block: 'nearest'});
+  textarea.focus({preventScroll: true}); textarea.select();
+  return false;
+}
+function responseView(content, item, data, version) {
+  const current = () => selected === item && responseVersion === version && content.isConnected;
+  const toolbar = element('div', undefined, 'response-toolbar');
+  const feedback = element('span', '', 'copy-feedback');
+  feedback.setAttribute('role', 'status'); feedback.setAttribute('aria-live', 'polite');
+  const actions = [];
+  let copying = false;
+  async function runCopy(source, label) {
+    if (copying || !current()) return;
+    copying = true;
+    for (const previous of content.querySelectorAll('.clipboard-manual,.clipboard-buffer')) previous.remove();
+    for (const button of actions) button.disabled = true;
+    feedback.className = 'copy-feedback'; feedback.textContent = '正在复制…';
+    try {
+      const text = await source();
+      if (!current()) return;
+      const copied = await copyText(text, content, current);
+      if (!current()) return;
+      feedback.textContent = copied ? `已复制${label}` : copied === false ? '自动复制失败；文本已选中，请按 ⌘C / Ctrl+C。' : '';
+    } catch (error) {
+      if (current()) { feedback.className = 'copy-feedback error'; feedback.textContent = error.message || String(error); }
+    } finally {
+      copying = false;
+      for (const button of actions) if (button.isConnected) button.disabled = false;
+    }
+  }
+  async function fullResponse() {
+    if (data.length > COPY_LIMIT) throw new Error('响应超过 20 Mi 字符，无法复制全文，请使用原生 Network 保存响应。');
+    if (!data.truncated) return {text: data.text, encoding: data.encoding};
+    const full = await readResponse(item.entry);
+    if (full.text.length > COPY_LIMIT) throw new Error('响应超过 20 Mi 字符，无法复制全文，请使用原生 Network 保存响应。');
+    return full;
+  }
+  function copyButton(label, source, feedbackLabel) {
+    const button = element('button', label);
+    button.onclick = () => runCopy(source, feedbackLabel);
+    actions.push(button); toolbar.append(button); return button;
+  }
+  copyButton(data.encoding === 'base64' ? '复制 Base64' : '复制原文', async () => (await fullResponse()).text, data.encoding === 'base64' ? ' Base64 文本' : '原始响应');
+  if (data.analysis.isJSON || (data.truncated && /json/i.test(item.entry.response?.content?.mimeType || ''))) {
+    copyButton('复制 JSON', async () => {
+      const full = await fullResponse();
+      if (full.encoding) throw new Error('编码响应不能作为 JSON 复制。');
+      return formatJSON(full.text);
+    }, '格式化 JSON');
+  }
+  const viewer = element('div', undefined, 'response-viewer');
+  const analysis = data.analysis;
+  if (tab === 'response' && analysis.isJSON) {
+    const modes = element('div', undefined, 'response-modes');
+    for (const [mode, label] of [['formatted', '格式化'], ['raw', '原始']]) {
+      const button = element('button', label);
+      button.setAttribute('aria-pressed', String(responseMode === mode));
+      button.onclick = () => {
+        responseMode = mode;
+        for (const candidate of modes.children) candidate.setAttribute('aria-pressed', String(candidate === button));
+        viewer.replaceChildren(highlightJSON(mode === 'raw' ? data.text : analysis.formatted, document));
+      };
+      modes.append(button);
+    }
+    toolbar.append(modes);
+  }
+  toolbar.append(feedback); content.append(toolbar);
+  if (data.truncated) content.append(element('p', `显示前 100 Ki 字符（共 ${data.length.toLocaleString()} 字符）；复制原文会按需读取完整响应。`, 'response-notice'));
+  if (data.encoding === 'base64') content.append(element('p', '二进制响应以 Base64 文本显示；复制的是编码文本。', 'response-notice'));
+  else if (analysis.error && analysis.isJSON) content.append(element('p', analysis.error, 'response-notice'));
+  if (tab === 'preview') {
+    if (analysis.isJSON) viewer.append(createJSONTree(analysis.value, document, {onCopy: value => runCopy(() => serializePreviewValue(value), '节点值')}));
+    else {
+      viewer.append(element('p', data.truncated ? '响应预览已截断，无法解析完整结构。可复制原文获取全文。' : data.encoding ? '编码响应不进行 JSON 结构解析。' : '此响应不是有效 JSON，显示原始文本。', 'response-notice'));
+      viewer.append(element('pre', data.text));
+    }
+  } else viewer.append(analysis.isJSON ? highlightJSON(responseMode === 'raw' ? data.text : analysis.formatted, document) : element('pre', data.text));
+  content.append(viewer);
+}
 function showSelection() {
   $('detail').hidden = !selected;
   if (!selected) { responseVersion++; $('detail-content').replaceChildren(); $('download').disabled = true; return; }
@@ -161,25 +289,13 @@ async function showTab() {
     } else if (request.postData?.params) content.append(section('Form Data', request.postData.params.map(p => [p.name, p.fileName ? `[file] ${p.fileName}` : p.value])));
     else if (Number(request.bodySize) > 0) content.append(element('p', 'Network 未提供请求体，请重新触发请求。', 'error'));
     else if (!params.length) content.append(element('p', '此请求没有查询参数或请求体。', 'muted'));
-  } else if (tab === 'response') {
+  } else if (tab === 'response' || tab === 'preview') {
     content.append(element('p', '正在读取原始响应…', 'muted'));
     try {
-      let data = responses.get(item.entry);
-      if (!data) {
-        data = await new Promise((resolve, reject) => {
-          if (typeof item.entry.getContent === 'function') item.entry.getContent((text, encoding) => resolve({text: text ?? '', encoding}));
-          else if (response.content?.text !== undefined) resolve(response.content);
-          else reject(new Error('浏览器未保留响应正文，请重新触发此请求后再查看。'));
-        });
-        // Retain only the bounded preview, never a second full response body.
-        data = {text: String(data.text).slice(0, RESPONSE_PREVIEW_LIMIT), encoding: data.encoding, truncated: String(data.text).length > RESPONSE_PREVIEW_LIMIT};
-        responses.set(item.entry, data);
-      }
+      const data = await loadResponse(item.entry);
       if (version !== responseVersion || selected !== item) return;
       content.replaceChildren();
-      if (data.encoding === 'base64') content.append(element('p', '二进制响应（Base64），不执行或渲染内容。', 'muted'));
-      content.append(element('pre', data.encoding === 'base64' ? data.text : pretty(data.text)));
-      if (data.truncated) content.append(element('p', '响应预览已截断为前 100 Ki 字符。', 'muted'));
+      responseView(content, item, data, version);
     } catch (error) { if (version === responseVersion) content.replaceChildren(element('p', error.message, 'error')); }
   } else if (tab === 'timing') {
     content.append(section('Overview', [['Started', item.entry.startedDateTime], ['Duration', formatTime(item.entry.time)]]));
