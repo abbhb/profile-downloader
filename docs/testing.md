@@ -25,7 +25,9 @@ npm run release:check -- v1.1.0
 | `tests/network.test.mjs` | 8 | 接口名称、未知字段、大小/耗时显示、组合筛选、排序、去重、Waterfall 边界 |
 | `scripts/tooling.test.mjs` | 7 | ZIP 确定性/完整性/路径、运行文件白名单、版本与权限、敏感材料规则和不回显秘密 |
 
-同轮 `npm run check -- v1.1.0` 与 `npm run security:check` 通过。前者检查 JavaScript 语法、Manifest、版本与本地资源引用；后者是静态预检，仍需人工审阅图片、Git 历史和附件。正式发布的 ZIP / checksum 校验应在最终文件落盘后再次完成。
+同轮 `npm run check -- v1.1.0` 与 `npm run security:check` 通过。前者检查 JavaScript 语法、Manifest、版本与本地资源引用；后者是静态预检，仍需人工审阅图片、Git 历史和附件。首次 GitHub CI 的 Ubuntu / Node.js 22、Ubuntu / Node.js 24、macOS / Node.js 22 三个矩阵均通过。
+
+正式发布的 ZIP / checksum 应在最终文件落盘后重新构建，并下载远端 Release 附件验证；本地检查和 CI 成功不能代替这一步。
 
 ## 模拟浏览器面板
 
@@ -43,6 +45,15 @@ README 图片来自这类预览，所有请求使用 `example.test` 合成数据
 当前 `npm test` 不包含整套浏览器端到端运行。浏览器交互验证需另外执行，并明确记录使用模拟 API 还是真实扩展环境。
 
 ## 真实扩展验收
+
+1.1.0 已在 macOS 的隔离 Chrome/133.0.6943.16 中完成真实扩展运行验证，本地合成服务的 10 项检查全部通过：
+
+- 真实 `chrome.devtools.network.getHAR` 捕获 GET / POST，请求出现在真实 DevTools 面板中。
+- 右键并选择 Profile 不发送请求；点击明确的重放按钮后，GET / POST 分别只发送一次。
+- GET 保留原查询参数并追加 `profile=1`；两次重放使用当前模拟 Cookie，POST 保留模拟 CSRF 头与完整 JSON body。
+- 真实 `inspectedWindow.eval → fetch → 报告结构检查 → chrome.downloads` 链路保存两份 HTML 文件。
+
+该验证通过 CDP 的下载行为覆盖将文件保存到隔离目录，绕过了 `saveAs` 原生文件选择器；**原生文件选择器交互未验证**。服务仅运行于 localhost，返回合成 Pyinstrument renderer HTML，**没有验证真实 Pyinstrument 采样、业务后端或 Django 集成**。原始本地运行记录不随公开源码发布。
 
 在 Chrome / Edge 扩展管理页加载最终解压包，重开本地演示页的 DevTools，至少验证以下过程：
 
