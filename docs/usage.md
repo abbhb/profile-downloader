@@ -1,0 +1,53 @@
+# 使用说明
+
+## 安装与更新
+
+从 [GitHub Releases](https://github.com/abbhb/profile-downloader/releases) 下载版本 ZIP 和对应 SHA-256 文件，校验后解压。打开 `chrome://extensions` 或 `edge://extensions`，启用开发者模式，用“加载已解压的扩展程序”选择含 `manifest.json` 的目录。
+
+更新时用新版本覆盖独立的扩展目录，点击扩展管理页的重新加载，再关闭并重新打开目标页面的 DevTools。扩展不通过浏览器商店自动更新。开发时也可以直接加载仓库源码目录。
+
+## 找到接口
+
+打开目标网页的 DevTools，在标签栏或 `»` 中选择 **Profile**。面板同步 DevTools 已记录的请求，并在请求完成时追加 HTTP(S) 请求。
+
+- 表格按 Name、Method、Status、Type、Size、Time 和 Waterfall 展示，Name 优先展示接口末级名称，完整 URL 可在详情中查看。
+- 输入接口名称或 URL 进行搜索，也支持空格组合 `method:POST`、`status:200`、`domain:example.test`；类型筛选可选择 All、Fetch/XHR、GET 或 POST。
+- 点击可排序的表头调整顺序。Waterfall 根据已记录时间绘制，用于定位相对先后，不是原生 Network 的完整性能工具。
+- 暂停录制用于停止自动接收新完成的请求；“同步 Network”用于显式重新读取现有记录。
+- “保留日志”决定页面导航时是否保留面板记录。清空只清除扩展面板里的记录，不清除原生 Network 或服务器日志。
+
+面板最多保留 300 条请求。已经带 `profile` 参数的请求不再加入，避免扩展重放污染列表。如果打开面板前 DevTools 没有记录请求，扩展无法恢复那段历史；请保持 DevTools 开启后重新触发。
+
+## 查看详情并 Profile
+
+单击请求行后，可查看 Headers、Payload、Response 和 Timing。Response 只在用户打开该页签时读取原始请求响应，仅保留正文前 102,400 个字符作为预览；JSON 可进一步格式化，所有内容以纯文本展示，不执行 HTML。响应可能已被 DevTools 释放；二进制响应仅展示有界的 Base64 文本，不解码渲染。Payload 预览也有截断，重放使用原始完整请求体。
+
+在 **Profile 面板内部** 右键请求，选择 Profile 操作，会选中请求并打开 Profile 详情。右键本身不发送请求。在 Profile 详情里确认接口和方法，点击“重放并下载 HTML”才会真正发送一次 GET / POST。
+
+双击或对选中的行按 Enter 也可进入 Profile 详情。表格支持方向键、Home / End，详情页签支持左右方向键；Shift+F10 可打开行菜单。
+
+重放将保留其他查询参数及其原始编码、完整 UTF-8 文本请求体和可设置的原请求头，添加或替换 `profile=1`，并使用当前页面的登录状态。POST 会再次执行业务操作；它不是只读抓取。没有完整 body、multipart、文件上传、二进制和非 UTF-8 body 会明确拒绝。签名 URL 可能因添加参数失效。
+
+成功取得带 Pyinstrument 标记的 HTML 后，浏览器弹出下载保存位置。扩展不在面板里执行该 HTML；如需浏览报告，请在本地打开下载文件。确认来源可信后再打开报告，分享前检查其中的调用栈、路径和业务信息。
+
+## 取消与超时
+
+发送中的请求可以取消；重放默认在 180 秒后中止，面板最多等待约 185 秒。浏览器取消不能撤销服务器已经完成的操作。关闭面板不保证已发送请求立即停止，可能继续执行到超时。
+
+## 常见情况
+
+| 现象 | 检查方向 |
+| --- | --- |
+| 列表为空 | 保持 DevTools 开启后重新触发请求，检查筛选与录制状态，或同步 Network |
+| 找不到 Profile | 重新加载扩展、重开 DevTools，检查标签栏 `»` |
+| 状态或时间缺失 | 部分 HAR 字段不可用；Size / Time 中的 `—` 表示未知，状态 `(failed)` 表示记录没有有效 HTTP 状态码，可结合原生 Network 排查 |
+| 返回普通 JSON | 后端没有将 `profile` 请求替换为 Pyinstrument HTML；检查最终生效的中间件和配置 |
+| 登录、CSRF 或 HTTP 错误 | 当前登录态、原请求令牌可能失效；在页面重新触发请求后再选择 |
+| 重定向报错 | 请求跳转了登录页或其他地址；扩展拒绝把跳转结果保存为报告 |
+| 缺少请求体 | DevTools 未提供完整 body；重新触发原请求，不能用空 body 代替 |
+| CORS / CSP / 网络错误 | 重放仍使用页面上下文及浏览器限制，检查 Console 和后端访问记录 |
+| Response 不可用 | 原始响应可能已被浏览器释放或不适合文本预览；不影响按完整请求数据准备重放 |
+
+JSON、缺少预期 Pyinstrument HTML 结构、失败响应和超过限制的报告会显示错误，不当作分析报告下载。识别会检查 HTML、`app` 容器与 Pyinstrument renderer 脚本结构；自定义输出布局可能不匹配。结构检查不是真实性认证或 HTML 安全扫描。
+
+后端接入和浏览器边界见 [兼容性](compatibility.md)，数据处理见 [隐私](privacy.md)。

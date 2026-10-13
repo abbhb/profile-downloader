@@ -1,0 +1,14 @@
+node_modules/
+dist/
+output/
+.playwright-cli/
+.playwright/
+.DS_Store
+*.log
+.env
+.env.*
+*.har
+*.pem
+*.key
+*.p12
+*.pfx

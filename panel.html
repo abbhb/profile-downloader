@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="panel.css"><title>Profile Downloader</title></head>
+<body>
+  <div class="toolbar" aria-label="请求工具栏">
+    <button id="record" class="icon-button recording" title="暂停记录" aria-label="暂停记录" aria-pressed="true"><span class="record-dot" aria-hidden="true"></span></button>
+    <button id="clear" title="清空请求" aria-label="清空请求">清空</button>
+    <span class="divider"></span>
+    <button id="refresh" title="从 Network 同步已完成的请求">同步 Network</button>
+    <label class="checkbox"><input id="preserve" type="checkbox">保留日志</label>
+    <span class="toolbar-end">Profile Downloader <span class="local">本地处理</span></span>
+  </div>
+  <div class="filterbar">
+    <label for="search">筛选</label><input id="search" type="search" placeholder="接口名、URL、method:POST、status:200" autocomplete="off">
+    <div id="filters" class="filters" aria-label="请求类型">
+      <button data-kind="all" aria-pressed="true" class="active">All</button><button data-kind="fetch" aria-pressed="false">Fetch/XHR</button><button data-kind="GET" aria-pressed="false">GET</button><button data-kind="POST" aria-pressed="false">POST</button>
+    </div>
+  </div>
+  <main id="workspace">
+    <section class="requests" aria-label="Network 请求列表">
+      <div id="table-scroll" class="table-scroll">
+        <table aria-label="已完成的网络请求">
+          <colgroup><col class="name-col"><col class="method-col"><col class="status-col"><col class="type-col"><col class="size-col"><col class="time-col"><col class="waterfall-col"></colgroup>
+          <thead><tr>
+            <th scope="col"><button data-sort="name">Name</button></th><th scope="col"><button data-sort="method">Method</button></th><th scope="col"><button data-sort="status">Status</button></th><th scope="col"><button data-sort="type">Type</button></th><th scope="col"><button data-sort="size">Size</button></th><th scope="col"><button data-sort="time">Time</button></th><th scope="col" aria-sort="ascending"><button data-sort="start">Waterfall <span aria-hidden="true">↑</span></button></th>
+          </tr></thead><tbody id="list"></tbody>
+        </table>
+        <div id="empty" class="empty"><strong>记录网络请求</strong><p>在页面触发请求，或点击“同步 Network”。</p><p>右键请求 → Profile，重放并下载报告。</p></div>
+      </div>
+    </section>
+    <section id="detail" class="detail" aria-label="请求详情" hidden>
+      <div class="detail-heading"><button id="close-detail" class="icon-button" title="关闭详情" aria-label="关闭详情">×</button><span id="selection"></span></div>
+      <div id="tabs" class="tabs" role="tablist" aria-label="请求详情分类">
+        <button id="tab-headers" role="tab" aria-selected="true" aria-controls="detail-content" data-tab="headers">Headers</button><button id="tab-payload" role="tab" aria-selected="false" aria-controls="detail-content" data-tab="payload" tabindex="-1">Payload</button><button id="tab-response" role="tab" aria-selected="false" aria-controls="detail-content" data-tab="response" tabindex="-1">Response</button><button id="tab-timing" role="tab" aria-selected="false" aria-controls="detail-content" data-tab="timing" tabindex="-1">Timing</button><button id="tab-profile" role="tab" aria-selected="false" aria-controls="detail-content" data-tab="profile" tabindex="-1">Profile</button>
+      </div>
+      <div id="detail-content" class="detail-content" role="tabpanel" aria-labelledby="tab-headers" tabindex="0"></div>
+      <div class="profile-actions">
+        <p id="replay-hint">添加 ?profile=1，使用当前登录状态重放一次。</p>
+        <div class="actions"><button id="download" class="primary" disabled>重放并下载 HTML</button><button id="cancel" disabled>取消</button></div>
+        <p id="status" role="status" aria-live="polite">等待选择请求</p>
+      </div>
+    </section>
+  </main>
+  <footer><span id="count">0 个请求</span><span>仅 GET / POST 可重放 · 后端需支持 Pyinstrument ?profile=1</span></footer>
+  <div id="context-menu" class="context-menu" role="menu" aria-label="请求操作" hidden><button id="context-profile" role="menuitem">Profile · 重放并下载…</button><button id="context-headers" role="menuitem">查看请求详情</button></div>
+  <script type="module" src="panel.mjs"></script>
+</body>
+</html>

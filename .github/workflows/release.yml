@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - run: npm run check
+      - run: npm run security:check
+      - run: npm run build
+      - run: npm run release:check
+      - name: Publish release archive and SHA-256 checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${RELEASE_TAG#v}"
+          archive="dist/profile-downloader-${version}.zip"
+          checksum="${archive}.sha256"
+          notes="docs/releases/${RELEASE_TAG}.md"
+          if [[ -f "$notes" ]]; then
+            gh release create "$RELEASE_TAG" "$archive" "$checksum" --verify-tag --title "Profile Downloader $RELEASE_TAG" --notes-file "$notes"
+          else
+            gh release create "$RELEASE_TAG" "$archive" "$checksum" --verify-tag --title "Profile Downloader $RELEASE_TAG" --generate-notes
+          fi
