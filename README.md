@@ -1,56 +1,54 @@
 # Profile Downloader
 
-A small Chrome / Edge DevTools extension to replay a captured **GET or POST** request with `?profile` and download its **Pyinstrument HTML report**.
+一款 Chrome / Edge DevTools 扩展：为捕获的 **GET 或 POST** 请求添加 `profile` 参数后重放，下载后端返回的 **Pyinstrument HTML 报告**。
 
 在熟悉的 Network 风格表格里找到接口，查看请求详情，右键进入 Profile 操作并下载调用耗时报告。扩展使用原请求参数和当前页面的登录状态；后端需要事先支持 Pyinstrument 报告响应。
 
-![Network-style Profile panel with synthetic requests](docs/images/network-panel.png)
+![使用合成请求展示的 Profile 面板](docs/images/network-panel.png)
 
-Preview uses synthetic `example.test` data / 预览仅使用合成演示数据。
+预览仅使用 `example.test` 合成演示数据。
 
-## Install / 安装
+## 安装
 
-1. Download the ZIP from [Releases](https://github.com/abbhb/profile-downloader/releases) and extract it.
-2. Open `chrome://extensions` or `edge://extensions` and enable **Developer mode**.
-3. Choose **Load unpacked** and select the extracted directory containing `manifest.json`.
-4. Reopen DevTools for your page and choose **Profile** (possibly inside `»`).
+1. 从[版本发布页](https://github.com/abbhb/profile-downloader/releases)下载 ZIP 并解压。
+2. 打开 `chrome://extensions` 或 `edge://extensions`，启用“开发者模式”。
+3. 点击“加载已解压的扩展程序”，选择含 `manifest.json` 的解压目录。
+4. 重新打开目标页面的 DevTools，选择 **Profile**；该标签可能收在 `»` 中。
 
-No build is required to load the source directory. This repository distributes an unpacked extension ZIP; it does not publish to a browser extension store.
+也可以直接克隆本仓库，将包含 `manifest.json` 的项目目录作为已解压扩展加载，无需构建。本项目通过 ZIP 分发已解压扩展，不通过浏览器扩展商店发布。
 
-也可以直接克隆本仓库，将包含 `manifest.json` 的项目目录作为已解压扩展加载。
+## 使用
 
-## Use / 使用
+1. 在被检查页面触发请求，或同步 DevTools 已记录的请求。
+2. 通过默认 22 px 单行列表、排序和筛选找到接口。悬停请求行或打开 Headers 可查看完整 URL；窄列表会自适应调整可见列。
+3. 选择请求，查看 Headers、Payload、Response、Preview 和 Timing。JSON 响应支持语法高亮和可折叠结构树，可一键复制原文、格式化 JSON 或节点值。
+4. 在 **Profile 面板内部**右键请求，进入 Profile 操作，再点击重放按钮，发送一次请求并保存 HTML 报告。
 
-1. Trigger the request in the inspected page, or sync the requests already recorded by DevTools.
-2. Find the endpoint using compact 22 px single-line rows, sorting and filters. Full URLs are available on hover and in Headers; narrow lists adapt the visible columns.
-3. Select the request to inspect Headers, Payload, Response, Preview and Timing. JSON responses have syntax highlighting and a collapsible tree; copy the original response, formatted JSON or a node value with one click.
-4. Right-click the request **inside Profile** to open its Profile action, then click the replay button to send once and save the HTML report.
+**POST 重放会再次执行业务操作。** 取消会尽可能中止浏览器请求，无法回滚服务器已经执行的操作。
 
-**POST replay executes the operation again.** Cancellation stops the browser request when possible; it does not roll back server work.
+响应预览保留前 102,400 个字符。Response 排版保留 JSON 的原始写法；Preview 使用 JavaScript 解析，大整数精度和重复键的精确内容应以 Response 为准。全文复制按需读取已记录的响应，最多允许 20 × 1024 × 1024 个字符；剪贴板写入失败会明确提示。详见[响应查看与复制](docs/usage.md#查看与复制响应)。
 
-Response previews keep the first 102,400 characters. Response formatting preserves JSON token spelling; Preview uses JavaScript parsing, so exact large numbers and duplicate keys should be checked in Response. Full-text copying reads the recorded response on demand, up to 20 × 1024 × 1024 characters; clipboard failures are reported. [Response viewing and copying](docs/usage.md#查看与复制响应).
+Chrome 公开扩展 API 不支持给原生 Network 请求行添加右键菜单，也不能读取其当前选中项。因此本项目提供独立的 Profile DevTools 面板，并在该面板内提供 Network 风格列表和右键操作。详见 [API 边界](docs/compatibility.md)。
 
-Chrome's public extension API does not expose a way to add an action to the native Network request-row context menu or read its current selection. Profile is a separate DevTools panel with a Network-style interface; the right-click action lives in that panel. See [API boundaries](docs/compatibility.md).
+## 适用技术栈
 
-## Compatibility / 适用技术栈
-
-| Layer | Support |
+| 层次 | 支持范围 |
 | --- | --- |
-| Browser | Desktop Chrome and Chromium-based Microsoft Edge with Manifest V3 DevTools APIs |
-| Extension | Vanilla JavaScript ES modules, HTML and CSS; no frontend framework or runtime dependencies |
-| Requests | HTTP(S) requests can be listed; GET and POST can be replayed with complete UTF-8 JSON, URL-encoded form or text bodies |
-| Backend | Python application configured to return a successful Pyinstrument **HTML response** when the `profile` query parameter is present |
-| Development | Node.js 22+ for local checks, tests and release packaging; Git and GitHub CLI for publishing |
+| 浏览器 | 支持 Manifest V3 DevTools API 的桌面 Chrome 和基于 Chromium 的 Microsoft Edge |
+| 扩展 | 原生 JavaScript ES modules、HTML、CSS；不依赖前端框架或运行时第三方包 |
+| 请求 | 可查看 HTTP(S) 请求；可重放具有完整 UTF-8 JSON、URL 编码表单或文本请求体的 GET / POST |
+| 后端 | 收到 `profile` 查询参数时，能够返回成功的 Pyinstrument HTML 响应的 Python 应用 |
+| 开发工具 | Node.js 22+ 用于本地检查、测试和打包；Git 与 GitHub CLI 用于发布 |
 
-Django can use Pyinstrument's `ProfilerMiddleware`; Flask / FastAPI and other applications need their own compatible integration. `BKAPP_OPEN_PYINSTRUMENT` belongs to some application-specific integrations, **not Pyinstrument or this extension**. The extension does not install a profiler or automatically profile arbitrary backends. [Backend setup](docs/compatibility.md#后端契约).
+Django 可以使用 Pyinstrument 的 `ProfilerMiddleware`；Flask、FastAPI 等应用需要自行提供兼容集成。`BKAPP_OPEN_PYINSTRUMENT` 是部分应用封装的配置，**不是 Pyinstrument 或本扩展的通用开关**。扩展不会安装服务端性能分析器，也不能自动分析任意后端。详见[后端接入](docs/compatibility.md#后端契约)。
 
-Multipart / file uploads, binary or non-UTF-8 bodies, missing POST bodies and non-GET/POST replay are not supported. Requests run in the inspected page's top-level context and remain subject to CORS, CSP, authentication and CSRF checks. [Full usage and limitations](docs/usage.md).
+不支持重放 multipart、文件上传、二进制或非 UTF-8 请求体、请求体缺失的 POST，以及 GET / POST 之外的方法。重放在被检查页面的顶层上下文执行，仍受 CORS、CSP、认证和 CSRF 校验限制。详见[使用说明与限制](docs/usage.md)。
 
-## Privacy / 隐私
+## 隐私
 
-Only the `downloads` permission is requested. There is no analytics, remote extension service or persistent request storage. Request data stays in panel memory; profiling sends the chosen replay to its original target with `profile` added. Reports are saved only through the browser download flow. Headers, payloads and downloaded reports may contain sensitive data: do not upload real captures or reports to this public repository. [Data flow and privacy](docs/privacy.md).
+扩展仅申请 `downloads` 权限，没有统计上报、远程扩展服务或持久化请求存储。请求数据保留在面板内存；用户主动重放时，向原始目标发送添加了 `profile` 的请求，报告通过浏览器下载流程保存。请求头、请求体和报告可能包含敏感信息，请勿将真实抓包或报告上传到公开仓库。详见[数据流与隐私](docs/privacy.md)。
 
-## Development / 开发
+## 开发
 
 ```sh
 npm test
@@ -60,6 +58,6 @@ npm run build
 npm run release:check
 ```
 
-Tests use synthetic data and local fixtures. Build produces `dist/profile-downloader-<version>.zip` and a SHA-256 checksum. See [validation scope](docs/testing.md), [architecture](docs/architecture.md), [contributing](CONTRIBUTING.md), [release workflow](docs/releasing.md) and [agent instructions](AGENTS.md).
+测试使用合成数据和本地测试样例。构建生成 `dist/profile-downloader-<version>.zip` 及 SHA-256 校验文件。另见[验证范围](docs/testing.md)、[架构](docs/architecture.md)、[贡献指南](CONTRIBUTING.md)、[发布流程](docs/releasing.md)和[项目指引](AGENTS.md)。
 
-Licensed under [MIT](LICENSE). Pyinstrument and the browsers are independent projects; this extension is not affiliated with them.
+本项目采用 [MIT 许可证](LICENSE)。Pyinstrument 与各浏览器均为独立项目，本扩展与其没有隶属关系。

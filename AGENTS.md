@@ -1,4 +1,4 @@
-# Project instructions
+# 项目协作规范
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph
@@ -10,6 +10,13 @@ In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the re
 
 If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
 <!-- CODEGRAPH_END -->
+
+## 文档与发布说明语言
+
+- README、CHANGELOG、用户文档及 GitHub Release 的标题和正文统一使用中文。产品名、技术名称、代码标识、命令和实际界面标签保留原文；不要把英文正文、中文正文或中英双标题零散拼接。
+- 如用户以后要求双语，应提供内容完整、分别组织的中文和英文版本，而不是在同一版本中混杂两种正文。
+- 发布前审阅实际 README、版本说明和远端 Release，确保语言一致；不得回退到自动生成的英文发布说明。
+- 仅修正文档语言或发布说明时，提交并推送文档，再更新对应版本的 Release 标题和正文即可，无需另发扩展版本。保留已发布的版本标签及下载附件。
 
 ## Product and implementation
 

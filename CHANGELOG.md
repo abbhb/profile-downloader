@@ -1,28 +1,28 @@
-# Changelog
+# 版本日志
 
-This project follows Semantic Versioning. Tags use the `vMAJOR.MINOR.PATCH` form.
+本项目采用语义化版本号，版本标签格式为 `vMAJOR.MINOR.PATCH`。
 
 ## 1.2.0 — 2026-10-13
 
-- Add JSON syntax highlighting in Response and a collapsible object / array tree in Preview.
-- Render tree children on demand in groups of 100, with a copy action for each value.
-- Add one-click original-response and formatted-JSON copying, including on-demand retrieval of complete text within the copy limit.
-- Keep bounded previews, explicit truncated / invalid / binary states, safe DOM rendering and the existing 22 px single-line request density.
-- Document clipboard export, copy failures and response-size limits without adding extension permissions.
+- 为 Response 增加 JSON 语法高亮，为 Preview 增加可折叠的对象和数组结构树。
+- 按需加载树节点，每组 100 项，并提供节点值复制操作。
+- 支持一键复制原始响应和格式化 JSON；预览截断时可按需读取复制长度限制内的完整正文。
+- 保留预览长度限制，明确展示截断、无效 JSON 和二进制状态，通过安全 DOM 渲染内容，并保持 22 px 单行请求列表。
+- 补充剪贴板导出、复制失败和响应大小限制的说明，无需新增扩展权限。
 
 ## 1.1.1 — 2026-10-13
 
-- Use 22 px single-line request rows so more endpoints fit in the panel.
-- Show the endpoint name in each row; keep the full URL available on hover and in Headers.
-- Tighten column widths and adapt narrow lists by hiding Waterfall / Type as needed while retaining full request details.
+- 将请求行改为 22 px 单行，让面板在同样高度内显示更多接口。
+- 每行展示接口末级名称，悬停或打开 Headers 仍可查看完整 URL。
+- 收紧列宽，窄列表按需隐藏 Waterfall 和 Type 列，详情保留完整请求信息。
 
 ## 1.1.0 — 2026-10-13
 
-First public release. The earlier 1.0.0 manifest belonged to a local prototype and was not a public release.
+首次公开发布。此前 manifest 中的 1.0.0 属于本地原型，没有公开发布。
 
-- Replace request cards with a compact Network-style request table, sorting, filters and request detail tabs.
-- Add a request-row context menu inside Profile to select an endpoint and open its profiling action.
-- Preserve GET / POST replay with query parameters, complete text bodies, current login state and settable request headers.
-- Document browser API boundaries, backend requirements, request privacy and safe local validation.
-- Add source checks, synthetic tests, sensitive-data checks and versioned release ZIPs with SHA-256 checksums.
-- Publish the source under the MIT license and define the tag / GitHub Release workflow.
+- 将请求卡片改为紧凑的 Network 风格表格，支持排序、筛选和请求详情页签。
+- 在 Profile 面板内增加请求行右键菜单，方便选择接口并进入性能分析操作。
+- 保留 GET / POST 重放能力，使用原查询参数、完整文本请求体、当前登录状态和可设置的请求头。
+- 说明浏览器 API 边界、后端要求、请求隐私和本地合成数据验证方式。
+- 增加源码检查、合成测试、敏感材料检查，以及带版本号和 SHA-256 校验文件的扩展 ZIP。
+- 采用 MIT 许可证开源，并建立版本标签和 GitHub Release 发布流程。

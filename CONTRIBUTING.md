@@ -1,4 +1,4 @@
-# Contributing
+# 贡献指南
 
 欢迎提交问题和改进。提交前请阅读 [架构](docs/architecture.md)、[兼容性](docs/compatibility.md) 和 [发布流程](docs/releasing.md)。
 

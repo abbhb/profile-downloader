@@ -41,8 +41,21 @@ jobs:
           archive="dist/profile-downloader-${version}.zip"
           checksum="${archive}.sha256"
           notes="docs/releases/${RELEASE_TAG}.md"
-          if [[ -f "$notes" ]]; then
-            gh release create "$RELEASE_TAG" "$archive" "$checksum" --verify-tag --title "Profile Downloader $RELEASE_TAG" --notes-file "$notes"
-          else
-            gh release create "$RELEASE_TAG" "$archive" "$checksum" --verify-tag --title "Profile Downloader $RELEASE_TAG" --generate-notes
+          if [[ ! -f "$notes" || ! -s "$notes" ]]; then
+            printf '发布失败：缺少非空发布说明文件 %s。\n' "$notes" >&2
+            exit 1
           fi
+          first_line=''
+          IFS= read -r first_line < "$notes" || [[ -n "$first_line" ]]
+          first_line="${first_line%$'\r'}"
+          h1_pattern='^#[[:blank:]]+(.*)$'
+          if [[ ! "$first_line" =~ $h1_pattern ]]; then
+            printf '发布失败：%s 首行必须是 Markdown H1（# 发布标题）。\n' "$notes" >&2
+            exit 1
+          fi
+          title="$(printf '%s' "${BASH_REMATCH[1]}" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+          if [[ -z "$title" ]]; then
+            printf '发布失败：%s 首行的发布标题不能为空。\n' "$notes" >&2
+            exit 1
+          fi
+          gh release create "$RELEASE_TAG" "$archive" "$checksum" --verify-tag --title "$title" --notes-file "$notes"

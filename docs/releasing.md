@@ -2,6 +2,19 @@
 
 用户可见的功能、行为和修复需要随本次工作及时完成版本、tag 与 GitHub Release。仅本地改完代码或 push 分支不算发布完成。仓库地址为 [abbhb/profile-downloader](https://github.com/abbhb/profile-downloader)，公开发布不等于上架 Chrome Web Store 或 Edge Add-ons。
 
+## 文档与发布说明语言
+
+README、版本日志、用户文档和 Release 标题、正文统一使用中文，产品名、技术名称、代码标识、命令及实际界面标签保留原文。不要使用中英双标题或夹杂英文正文。需要双语时，提供分别组织、内容完整的两个版本。
+
+每个版本必须提供非空的 `docs/releases/v<版本>.md`，首行使用 `# 版本号：中文说明` 标题；自动发布从首行提取 Release 标题，缺少说明或标题时直接失败，不回退到自动生成的英文说明。
+
+仅修正文档语言或发布说明时，不需要另发扩展版本：提交并推送文档后，用 `gh release edit` 更新对应已发布版本的标题和正文，再读取远端核对。不要移动已发布的版本标签或替换下载附件。例如：
+
+```sh
+gh release edit v1.2.0 --repo abbhb/profile-downloader --title "v1.2.0：JSON 响应高亮、结构预览与复制" --notes-file docs/releases/v1.2.0.md
+gh release view v1.2.0 --repo abbhb/profile-downloader --json name,body,url
+```
+
 ## 1. 完成功能并验证
 
 在仓库根目录使用 Node.js 22+。项目没有 npm 第三方依赖，保留锁文件以支持确定的 CI 安装。
@@ -91,7 +104,7 @@ gh release view v1.1.0 --repo abbhb/profile-downloader
 仅当确认工作流没有发布，且上述验证均已通过时，使用相同 tag、笔记和两个已校验的附件：
 
 ```sh
-gh release create v1.1.0 dist/profile-downloader-1.1.0.zip dist/profile-downloader-1.1.0.zip.sha256 --repo abbhb/profile-downloader --verify-tag --title "Profile Downloader v1.1.0" --notes-file docs/releases/v1.1.0.md
+gh release create v1.1.0 dist/profile-downloader-1.1.0.zip dist/profile-downloader-1.1.0.zip.sha256 --repo abbhb/profile-downloader --verify-tag --title "v1.1.0：首次开源发布" --notes-file docs/releases/v1.1.0.md
 ```
 
 `--verify-tag` 防止 GitHub 自动从错误分支补建 tag。详细 CLI 行为见 [GitHub CLI release create](https://cli.github.com/manual/gh_release_create)。
